@@ -1,3 +1,4 @@
+// Using node file system & a csv parser package to read the directory csv.
 const fs = require('fs');
 const csv = require('csv-parser');
 
@@ -18,17 +19,20 @@ app.use(function (req, res, next) {
     next();
 });
 var server = require( "http" ).createServer( app );
+
 let stores = [];
+// local path to csv File.
 const filepath = './directory.csv'
 
 fs.createReadStream(filepath)
-.on('error', () => {
+.on('error', (error) => {
   // handle error
+  console.log('An error occured during csv read', error);
 })
 
 .pipe(csv())
 .on('data', (row) => {
-  // identical to the store type on angular side.
+  // identical to the store type on angular app.
   store = {
     name: row['Store Name'],
     location: {lat: +row.Latitude, lng: +row.Longitude},
@@ -46,10 +50,11 @@ fs.createReadStream(filepath)
 })
 
 .on('end', () => {
-  // handle end of CSV
+  // handle end of CSV, this is really just logging to the server for debugging. 
   console.log('ready!', stores.length);
 })
 
+// initialize socket server
 var io = require('socket.io').listen(server, {
     log: false,
     agent: false,
@@ -58,18 +63,24 @@ var io = require('socket.io').listen(server, {
 });
 
 io.on("connection", socket => {
+
+  // An instance of the front end as asked for nearby stores
   socket.on("request", data => {
     let nearByStores = [];
     stores.forEach((store) => {
+      // get  distance of each store
       let distance = distanceCalc(store.location, data.location);
       if(distance < data.distance) {
+        // If less than request distance, add it to the return array. Also add the distance to the object to show on the UI.
         store.distance = distance;
         nearByStores.push(store);
       }
     });
+    // Sort so closest is displayed first.
     nearByStores = nearByStores.sort(function(a, b){
       return a.distance - b.distance;
     })
+    // return the result array to the front end.
     socket.emit('result',nearByStores);
   });
 });
@@ -89,7 +100,7 @@ function distanceCalc(point1, point2) {
      (1 - Math.cos(dLon))/2;
   var d = R * 2 * Math.asin(Math.sqrt(a));
 
-  //this returns all measurements in KM
+  //this returns all measurements in KM , lets format this as miles.
   var miles = d/1.609344;
   
   return miles;
