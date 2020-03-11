@@ -1,0 +1,21 @@
+{
+  "name": "gw-storefinder-backend",
+  "version": "1.0.0",
+  "description": "a simple socket io server to return a list of store locations",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon storeFinderBackend.js"
+  },
+  "author": "Koels",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "csv-parser": "^2.3.2",
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
